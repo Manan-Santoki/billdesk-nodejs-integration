@@ -68,7 +68,7 @@ Before you begin, ensure you have the following:
 4.  **Run the Server:**
 
     ```bash
-    npm start # or node app.js
+    npm start # or node index.js
     ```
 
     The server will start running on the specified port (default: `4000`).
