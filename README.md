@@ -1,0 +1,321 @@
+
+# BillDesk API Integration (Node.js)
+
+[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+
+[![Node.js Version](https://img.shields.io/badge/node-%3E=14.0.0-blue.svg)](https://nodejs.org/en/download/)
+
+## Description
+
+This project provides an open-source Node.js implementation for integrating with the BillDesk Payment Gateway API.  Due to the lack of comprehensive official documentation for Node.js, this project aims to offer a practical and understandable example for developers looking to integrate BillDesk payments into their Node.js applications.
+
+This implementation focuses on the **Create Order API**, which is the first step in initiating a payment transaction with BillDesk. It handles the necessary steps of data encryption using JWT and communication with the BillDesk API.  It also outlines the subsequent steps for frontend integration using the BillDesk SDK to complete the payment flow.
+
+**Please Note:** This is an **unofficial** implementation and should be used as a reference and example. For production environments, always refer to the official [BillDesk documentation](https://docs.billdesk.io/docs/billdesk-web-sdk) and support, and ensure you have thoroughly tested and secured your integration.
+
+## Key Features
+
+*   **Implements Create Order API:**  Provides a Node.js implementation for the BillDesk Create Order API.
+*   **JWT Encryption:**  Utilizes JWT for secure payload encryption as required by BillDesk.
+*   **Environment-Based Configuration:**  Loads API credentials and settings from environment variables for security.
+*   **Modular Design:**  Organized codebase with modules for configuration, controllers, services, and utilities.
+*   **API Examples:**  Includes examples for the Create Order API request and response.
+*   **Frontend SDK Integration Guide:**  Offers guidance on integrating the BillDesk Web SDK in your frontend application.
+*   **Transaction Response Handling:**  Demonstrates how to capture and decrypt the payment transaction response.
+
+## Prerequisites
+
+Before you begin, ensure you have the following:
+
+*   **Node.js (>= 14.0.0):**  Make sure you have Node.js installed on your system. You can download it from [nodejs.org](https://nodejs.org/).
+*   **BillDesk Merchant Account:** You need to have a valid merchant account with BillDesk to obtain the necessary API credentials.
+*   **BillDesk API Credentials:** Obtain the following credentials from BillDesk:
+    *   **Merchant ID (`BILLDESK_MERCHANT_ID`)**
+    *   **Secure Key (`BILLDESK_SECURE_KEY`)**
+    *   **Client ID (`BILLDESK_CLIENT_ID`)**
+    *   **BillDesk API URL (`BILLDESK_URL`)** -  (e.g., `https://uat1.billdesk.com/u2/payments/ve1_2/orders/create`) - *Please confirm the correct production URL with BillDesk.*
+*   **Whitelisted IP Address:** Ensure the IP address of your server making the API requests is whitelisted with BillDesk. Contact BillDesk support to whitelist your server's IP.
+
+## Installation
+
+1.  **Clone the repository:**
+
+    ```bash
+    git clone https://github.com/Manan-Santoki/billdesk-nodejs-integration
+    cd billdesk-nodejs-integration
+    ```
+
+2.  **Install Dependencies:**
+
+    ```bash
+    npm install
+    ```
+
+3.  **Configure Environment Variables:**
+
+    Create a `.env` file in the root directory of the project and add your BillDesk API credentials:
+
+    ```env
+    BILLDESK_MERCHANT_ID="YOUR_BILLDESK_MERCHANT_ID"
+    BILLDESK_SECURE_KEY="YOUR_BILLDESK_SECURE_KEY"
+    BILLDESK_CLIENT_ID="YOUR_BILLDESK_CLIENT_ID"
+    BILLDESK_URL="YOUR_BILLDESK_API_URL" # e.g., https://uat1.billdesk.com/u2/payments/ve1_2/orders/create
+    PORT=4000 # Optional: Change the port if needed
+    ```
+
+    **Important:**  Never commit your `.env` file to version control, especially if your repository is public.
+
+4.  **Run the Server:**
+
+    ```bash
+    npm start # or node app.js
+    ```
+
+    The server will start running on the specified port (default: `4000`).
+
+## API Endpoint Usage
+
+### Create Order API
+
+*   **Endpoint:** `POST /api/payments/create-order`
+*   **Description:** This endpoint initiates the order creation process with BillDesk.
+*   **Request Body (JSON):**
+
+    ```json
+    {
+        "orderid": "ORDER12345",
+        "amount": "100.00",
+        "customer": {
+            "first_name": "John",
+            "last_name": "Doe",
+            "mobile": "9022979988"
+        },
+        "device": {
+            "ip": "127.0.0.1"
+        },
+        "additional_info": {  // Optional
+            "additional_info1": "Test Info 1",
+            "additional_info2": "Test Info 2"
+        }
+    }
+    ```
+
+    **Request Body Parameters:**
+
+    | Parameter        | Type    | Required | Description                                                                 |
+    | ---------------- | ------- | -------- | --------------------------------------------------------------------------- |
+    | `orderid`        | String  | Yes      | Unique order ID generated by your system.                                    |
+    | `amount`         | String  | Yes      | Order amount (e.g., "100.00").                                                |
+    | `customer`       | Object  | Yes      | Customer information.                                                        |
+    | `customer.first_name` | String  | Yes      | Customer's first name.                                                       |
+    | `customer.last_name`  | String  | Yes      | Customer's last name.                                                        |
+    | `customer.mobile`     | String  | Yes      | Customer's mobile number.                                                    |
+    | `device`         | Object  | Yes      | Device information.                                                           |
+    | `device.ip`      | String  | Yes      | Customer's IP address.                                                        |
+    | `additional_info`| Object  | No       | Optional additional information to be passed to BillDesk.                     |
+
+*   **Example Request (using `curl`):**
+
+    ```bash
+    curl -X POST \
+      http://localhost:4000/api/payments/create-order \
+      -H 'Content-Type: application/json' \
+      -d '{
+            "orderid": "ORDER12345",
+            "amount": "100.00",
+            "customer": {
+                "first_name": "John",
+                "last_name": "Doe",
+                "mobile": "9022979988"
+            },
+            "device": {
+                "ip": "127.0.0.1"
+            },
+            "additional_info": {
+                "additional_info1": "Test Info 1",
+                "additional_info2": "Test Info 2"
+            }
+        }'
+    ```
+
+*   **Successful Response (200 OK):**
+
+    ```json
+    {
+        "objectid": "order",
+        "orderid": "ORDERID280920230002",
+        "bdorderid": "OAZY21S8GXAC",
+        "mercid": "BDMERCID",
+        "order_date": "2023-09-28T12:25:00+05:30",
+        "amount": "2.00",
+        "currency": "356",
+        "ru": "https://www.merchanturl.com/response.jsp",
+        "additional_info": {
+            "additional_info1": "Details1",
+            "additional_info2": "Details2",
+            "additional_info3": "NA",
+            "additional_info4": "NA",
+            "additional_info5": "NA",
+            "additional_info6": "NA",
+            "additional_info7": "NA"
+        },
+        "itemcode": "DIRECT",
+        "createdon": "2023-09-28T12:33:36+05:30",
+        "next_step": "redirect",
+        "links": [
+            {
+                "href": "https://www.domainname.com/pgi/ve1_2/orders/ORDERID280920230002",
+                "rel": "self",
+                "method": "GET"
+            },
+            {
+                "href": "https://www.domainname.com/pgi/MerchantPayment/",
+                "rel": "redirect",
+                "method": "POST",
+                "parameters": {
+                    "mercid": "BDMERCID",
+                    "bdorderid": "OAZY21S8GXAC",
+                    "rdata": "ENCRYPTED_DATA_HERE"
+                },
+                "valid_date": "2023-09-28T13:03:36+05:30",
+                "headers": {
+                    "authorization": "OToken ENCRYPTED_DATA_HERE"
+                }
+            }
+        ],
+        "status": "ACTIVE",
+        "invoice": {
+            "invoice_number": "11221133",
+            "invoice_display_number": "11221133",
+            "invoice_date": "2023-09-26T12:25:00+05:30",
+            "customer_name": "John",
+            "gst_details": {
+                "cgst": "8.00",
+                "sgst": "8.00",
+                "igst": "0.00",
+                "gst": "16.00",
+                "cess": "0.00",
+                "gstincentive": "5.00",
+                "gstpct": "16.00",
+                "gstin": "07AAAAA2194A1A1"
+            }
+        }
+    }
+    ```
+
+    The response contains important information, including the `bdorderid`, `authToken` (within the `links[1].headers.authorization`), and redirect URLs needed for the frontend integration.
+
+## Frontend Integration (BillDesk SDK)
+
+To complete the payment flow, you need to integrate the BillDesk Web SDK into your frontend application. Follow these steps:
+
+1.  **Include JS and CSS Links:**
+
+    Add the following code within the `<head>` section of your HTML page or component:
+
+    ```html
+    <script type="module" src="https://uat1.billdesk.com/merchantuat/sdk/dist/billdesksdk/billdesksdk.esm.js"></script>
+    <script nomodule="" src="https://uat1.billdesk.com/merchant-uat/sdk/dist/billdesksdk.js"></script>
+    <link href="https://uat1.billdesk.com/merchant-uat/sdk/dist/billdesksdk/billdesksdk.css" rel="stylesheet">
+    ```
+
+    **Note:**  The URLs provided are for the **UAT (User Acceptance Testing)** environment. For production, ensure you use the correct production URLs provided by BillDesk.
+
+2.  **Configure SDK Objects:**
+
+    Prepare the `flow_config` and `config` JavaScript objects using the data received from the Create Order API response and any desired customizations.
+
+    ```javascript
+    var flow_config = {
+        merchantId: "BDMERCID", // Replace with your merchant ID
+        bdOrderId: "OAZY21S8GXAC", // Replace with bdorderid from Create Order API response
+        authToken: "OToken ENCRYPTED_DATA_HERE", // Replace with authToken from Create Order API response (links[1].headers.authorization)
+        childWindow: true, // Set to true to open in a popup window
+        returnUrl: "http://www.yourdomain.com/api/pgresponse", // Replace with your return URL
+        retryCount: 3,
+        prefs: {
+            "payment_categories": ["card", "nb"], // Optional: Payment categories to display
+            "allowed_bins": ["459150", "525211"] // Optional: Allowed card bins
+        },
+        netBanking:{ // Optional: Netbanking customizations
+            "showPopularBanks" : "Y",
+            "popularBanks": ["Kotak Bank"," AXIS Bank [Retail]"]
+        }
+    };
+
+    var config = {
+        merchantLogo: "data:image/png;base64:YOUR_MERCHANT_LOGO_BASE64_STRING", // Optional: Base64 encoded merchant logo
+        flowConfig: flow_config,
+        flowType: "payments"
+    };
+    ```
+
+    **Important:** Replace the placeholder values in `flow_config` with the actual values from your Create Order API response and your merchant details. Customize `prefs` and `netBanking` as needed.
+
+3.  **Launch the SDK:**
+
+    Use the `billdeskSdk.start(config)` function to launch the BillDesk payment SDK, typically triggered by a button click or payment initiation event in your frontend.
+
+    ```javascript
+    billdeskSdk.start(config)
+        .then(response => {
+            console.log("SDK Started Successfully", response);
+        })
+        .catch(error => {
+            console.error("SDK Failed to Start", error);
+        });
+    ```
+
+## Capture Transaction Response
+
+After the user completes the payment, BillDesk will redirect the user to the `ru` (Return URL) specified in the Create Order API request.  BillDesk will also send a POST request to this URL containing transaction details.
+
+**Transaction Response Parameters in URL (GET Request - Redirect):**
+
+```
+https://www.yourdomain.com/api/pgresponse?mercid=BDMERCID&terminal_state=Y&orderid=MERCORDERID12&bdcres=ENCRYPTED_TRANSACTION_RESPONSE&transaction_response=ENCRYPTED_TRANSACTION_RESPONSE_JWT&return_url=YOUR_RETURN_URL
+```
+
+The `transaction_response` parameter contains a JWT-encoded string which holds detailed transaction information. You will need to decrypt and verify this JWT token using your `BILLDESK_SECURE_KEY` on your backend to get the transaction details.
+
+**Example of Decrypting Transaction Response (Backend - Node.js):**
+
+You can use the `verifyToken` function from `utils/jwtUtils.js` (included in this project) to decrypt the `transaction_response` JWT:
+
+```javascript
+const { verifyToken } = require('./utils/jwtUtils');
+
+// ... (Extract transaction_response from the query parameters)
+const encryptedTransactionResponseJWT = req.query.transaction_response;
+const decryptedTransactionResponse = verifyToken(encryptedTransactionResponseJWT);
+
+if (decryptedTransactionResponse) {
+    console.log("Decrypted Transaction Response:", decryptedTransactionResponse);
+    // Process the decrypted transaction response
+} else {
+    console.error("Error decrypting transaction response");
+    // Handle decryption error
+}
+```
+
+**Note:** You can also use online JWT decoding tools like [jwt.io](https://jwt.io/) to manually decode and inspect the `transaction_response` JWT for debugging purposes. Paste the JWT value into the "Encoded" section and ensure you select `HS256` algorithm and provide your `BILLDESK_SECURE_KEY` in the "Verify Signature" section.
+
+
+## Disclaimer
+
+This project is provided as-is, for educational and demonstrative purposes only. It is not an officially supported BillDesk product.  Use this code at your own risk.  Always refer to the official BillDesk documentation and integrate based on your specific security requirements and compliance standards.  For production implementations, thorough testing and security audits are highly recommended. Contact BillDesk support for any production-related queries and guidance.
+
+## Contributing
+
+Contributions to this project are welcome! If you find any bugs, have suggestions for improvements, or want to add new features, please feel free to open issues or submit pull requests.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details.
+
+---
+## References
+
+*   **BillDesk Official Website:** [https://docs.billdesk.io/docs/billdesk-web-sdk](https://docs.billdesk.io/docs/billdesk-web-sdk/) -  Main website for BillDesk.  *Refer to this site for general information about BillDesk services and potentially for contact details for official support.*
+
+
