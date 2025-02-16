@@ -26,6 +26,7 @@ async function createOrder(orderData, headers) {
     };
 
     const signedPayload = signPayload(payload);
+    console.log('Signed Payload:', signedPayload);
 
     return new Promise((resolve, reject) => {
         request.post(
@@ -44,7 +45,9 @@ async function createOrder(orderData, headers) {
                     console.error('API Call Error:', error);
                     reject(error);
                 } else {
+                    console.log('Encrypted Response:', response.body);
                     const decodedResponse = verifyToken(body); // Decode JWT response
+                    console.log('Decoded Response:', decodedResponse);
                     if (decodedResponse) {
                         resolve(decodedResponse);
                     } else {
